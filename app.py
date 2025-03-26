@@ -1,7 +1,11 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import sqlite3
+from flask_cors import CORS
 
+
+# Flask framework que constrói API
 app = Flask(__name__)
+CORS(app)
 
 # with para ficar simples o código, connect para conectar ao banco de dados, conn joga tudo aí dentro do conn que é uma variável (o que e onde)
 def init_db():
@@ -23,7 +27,7 @@ init_db()
 #Rota de início
 @app.route('/')
 def homepage():
-    return '<h2>Minha página com Flask mais linda que a do Vini!</h2>'
+    return render_template('index.html')
 
 @app.route("/doar", methods=['POST'])
 def doar():
@@ -65,7 +69,23 @@ def listar_livros():
         livros_formatados.append(dicionario_livros)
         return jsonify(livros_formatados)
 
+@app.route('/livros/<int:livro_id>', methods=['DELETE'])
+def deletar_livro(livro_id):
+    with sqlite3.connect('database.db') as conn:
+          conexao_cursor = conn.cursor()
+          conexao_cursor.execute("DELETE FROM livros WHERE id=?", (livro_id,))
+          conn.commit()
+    
+    # testa se existe o id digitado
+    if conexao_cursor.rowcount == 0:
+        return jsonify({"erro": "Livro não encontrado"}), 400
+    
+    return jsonify({"mensagem": "Livro excluído com sucesso"}), 200    
+
+# Se estiver na main 
 if __name__ == "__main__":
         app.run(debug=True)
+
+
         
         
